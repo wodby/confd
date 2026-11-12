@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kelseyhightower/confd/log"
+	"github.com/wodby/confd/log"
 )
 
 func TestInitConfigDefaultConfig(t *testing.T) {
@@ -14,7 +14,6 @@ func TestInitConfigDefaultConfig(t *testing.T) {
 			Backend:      "etcd",
 			BackendNodes: []string{"http://127.0.0.1:4001"},
 			Scheme:       "http",
-			Filter:       "*",
 		},
 		TemplateConfig: TemplateConfig{
 			ConfDir:     "/etc/confd",
@@ -26,7 +25,7 @@ func TestInitConfigDefaultConfig(t *testing.T) {
 		Interval:   600,
 	}
 	if err := initConfig(); err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	if !reflect.DeepEqual(want, config) {
 		t.Errorf("initConfig() = %v, want %v", config, want)

@@ -3,7 +3,7 @@ Package log provides support for logging to stdout and stderr.
 
 Log entries will be logged in the following format:
 
-    timestamp hostname tag[pid]: SEVERITY Message
+	timestamp hostname tag[pid]: SEVERITY Message
 */
 package log
 
@@ -43,7 +43,7 @@ func SetTag(t string) {
 func SetLevel(level string) {
 	lvl, err := log.ParseLevel(level)
 	if err != nil {
-		Fatal(fmt.Sprintf(`not a valid level: "%s"`, level))
+		Fatal("%s", fmt.Sprintf(`not a valid level: "%s"`, level))
 	}
 	log.SetLevel(lvl)
 }

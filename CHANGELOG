@@ -1,3 +1,19 @@
+### v0.17.0
+
+First release of Wodby's fork of kelseyhightower/confd, for Wodby Edge.
+
+- Module path is now github.com/wodby/confd.
+- Only the etcd v3 backend (`etcdv3`, or `etcd`, which already used the same
+  client) and the env backend remain. The consul, dynamodb, file, rancher, redis,
+  ssm, vault and zookeeper backends and their flags and configuration options are
+  removed.
+- Go 1.26; etcd client 3.6.16; current gRPC, golang.org/x/net and other
+  dependencies. The vendor directory is removed.
+- Log and test messages are no longer used as format strings, so a `%` in a key,
+  path or error is printed as is.
+- `Version` can be set at build time.
+- CI runs vet, tests, the env and etcd v3 integration tests, and govulncheck.
+
 ### v0.16.0
 
 28f72608 Release arm64 binaries

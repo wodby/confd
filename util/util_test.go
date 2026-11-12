@@ -7,7 +7,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/kelseyhightower/confd/log"
+	"github.com/wodby/confd/log"
 )
 
 // createRecursiveDirs is a helper function which creates temporary directorie
@@ -20,13 +20,14 @@ import (
 // │   ├── sub1.toml
 // │   └── sub12.toml
 // └── subDir2
-//       ├── sub2.other
-//       ├── sub2.toml
-//       ├── sub22.toml
-//       └── subSubDir
-//             ├── subsub.other
-//             ├── subsub.toml
-//             └── subsub2.toml
+//
+//	├── sub2.other
+//	├── sub2.toml
+//	├── sub22.toml
+//	└── subSubDir
+//	      ├── subsub.other
+//	      ├── subsub.toml
+//	      └── subsub2.toml
 func createDirStructure() (rootDir string, err error) {
 	mod := os.FileMode(0755)
 	flag := os.O_RDWR | os.O_CREATE | os.O_EXCL
@@ -106,7 +107,7 @@ func TestRecursiveFilesLookup(t *testing.T) {
 	defer os.RemoveAll(rootDir)
 	files, err := RecursiveFilesLookup(rootDir, "*toml")
 	if err != nil {
-		t.Errorf("Failed to run recursiveFindFiles, got error: " + err.Error())
+		t.Error("Failed to run recursiveFindFiles, got error: " + err.Error())
 	}
 	sort.Strings(files)
 	exceptedFiles := []string{
@@ -130,24 +131,24 @@ func TestIsConfigChangedTrue(t *testing.T) {
 	src, err := ioutil.TempFile("", "src")
 	defer os.Remove(src.Name())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	_, err = src.WriteString("foo")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	dest, err := ioutil.TempFile("", "dest")
 	defer os.Remove(dest.Name())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	_, err = dest.WriteString("foo")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	status, err := IsConfigChanged(src.Name(), dest.Name())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	if status == true {
 		t.Errorf("Expected IsConfigChanged(src, dest) to be %v, got %v", true, status)
@@ -159,24 +160,24 @@ func TestIsConfigChangedFalse(t *testing.T) {
 	src, err := ioutil.TempFile("", "src")
 	defer os.Remove(src.Name())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	_, err = src.WriteString("src")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	dest, err := ioutil.TempFile("", "dest")
 	defer os.Remove(dest.Name())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	_, err = dest.WriteString("dest")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	status, err := IsConfigChanged(src.Name(), dest.Name())
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	if status == false {
 		t.Errorf("Expected sameConfig(src, dest) to be %v, got %v", false, status)

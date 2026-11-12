@@ -8,9 +8,9 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/kelseyhightower/confd/backends"
-	"github.com/kelseyhightower/confd/log"
-	"github.com/kelseyhightower/confd/resource/template"
+	"github.com/wodby/confd/backends"
+	"github.com/wodby/confd/log"
+	"github.com/wodby/confd/resource/template"
 )
 
 func main() {
@@ -20,20 +20,20 @@ func main() {
 		os.Exit(0)
 	}
 	if err := initConfig(); err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("%s", err.Error())
 	}
 
 	log.Info("Starting confd")
 
 	storeClient, err := backends.New(config.BackendsConfig)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("%s", err.Error())
 	}
 
 	config.TemplateConfig.StoreClient = storeClient
 	if config.OneTime {
 		if err := template.Process(config.TemplateConfig); err != nil {
-			log.Fatal(err.Error())
+			log.Fatal("%s", err.Error())
 		}
 		os.Exit(0)
 	}
@@ -57,9 +57,9 @@ func main() {
 	for {
 		select {
 		case err := <-errChan:
-			log.Error(err.Error())
+			log.Error("%s", err.Error())
 		case s := <-signalChan:
-			log.Info(fmt.Sprintf("Captured %v. Exiting...", s))
+			log.Info("%s", fmt.Sprintf("Captured %v. Exiting...", s))
 			close(doneChan)
 		case <-doneChan:
 			os.Exit(0)

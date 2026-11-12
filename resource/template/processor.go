@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kelseyhightower/confd/log"
-	util "github.com/kelseyhightower/confd/util"
+	"github.com/wodby/confd/log"
+	util "github.com/wodby/confd/util"
 )
 
 type Processor interface {
@@ -25,7 +25,7 @@ func process(ts []*TemplateResource) error {
 	var lastErr error
 	for _, t := range ts {
 		if err := t.process(); err != nil {
-			log.Error(err.Error())
+			log.Error("%s", err.Error())
 			lastErr = err
 		}
 	}
@@ -49,7 +49,7 @@ func (p *intervalProcessor) Process() {
 	for {
 		ts, err := getTemplateResources(p.config)
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatal("%s", err.Error())
 			break
 		}
 		process(ts)
@@ -71,15 +71,14 @@ type watchProcessor struct {
 }
 
 func WatchProcessor(config Config, stopChan, doneChan chan bool, errChan chan error) Processor {
-	var wg sync.WaitGroup
-	return &watchProcessor{config, stopChan, doneChan, errChan, wg}
+	return &watchProcessor{config: config, stopChan: stopChan, doneChan: doneChan, errChan: errChan}
 }
 
 func (p *watchProcessor) Process() {
 	defer close(p.doneChan)
 	ts, err := getTemplateResources(p.config)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("%s", err.Error())
 		return
 	}
 	for _, t := range ts {
@@ -111,9 +110,9 @@ func (p *watchProcessor) monitorPrefix(t *TemplateResource) {
 func getTemplateResources(config Config) ([]*TemplateResource, error) {
 	var lastError error
 	templates := make([]*TemplateResource, 0)
-	log.Debug("Loading template resources from confdir " + config.ConfDir)
+	log.Debug("%s", "Loading template resources from confdir "+config.ConfDir)
 	if !util.IsFileExist(config.ConfDir) {
-		log.Warning(fmt.Sprintf("Cannot load template resources: confdir '%s' does not exist", config.ConfDir))
+		log.Warning("%s", fmt.Sprintf("Cannot load template resources: confdir '%s' does not exist", config.ConfDir))
 		return nil, nil
 	}
 	paths, err := util.RecursiveFilesLookup(config.ConfigDir, "*toml")
@@ -126,7 +125,7 @@ func getTemplateResources(config Config) ([]*TemplateResource, error) {
 	}
 
 	for _, p := range paths {
-		log.Debug(fmt.Sprintf("Found template: %s", p))
+		log.Debug("%s", fmt.Sprintf("Found template: %s", p))
 		t, err := NewTemplateResource(p, config)
 		if err != nil {
 			lastError = err

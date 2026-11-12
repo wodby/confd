@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kelseyhightower/confd/log"
+	"github.com/wodby/confd/log"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"sync"
 )
@@ -265,5 +265,4 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 	case <-ctx.Done():
 		return 0, ctx.Err()
 	}
-	return 0, err
 }

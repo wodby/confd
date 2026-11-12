@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kelseyhightower/confd/log"
+	"github.com/wodby/confd/log"
 )
 
 var replacer = strings.NewReplacer("/", "_")
@@ -36,7 +36,7 @@ func (c *Client) GetValues(keys []string) (map[string]string, error) {
 		}
 	}
 
-	log.Debug(fmt.Sprintf("Key Map: %#v", vars))
+	log.Debug("%s", fmt.Sprintf("Key Map: %#v", vars))
 
 	return vars, nil
 }

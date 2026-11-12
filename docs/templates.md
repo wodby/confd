@@ -237,8 +237,8 @@ key: {{base64Decode "VmFsdWU="}}
 #### Add keys to etcd
 
 ```
-etcdctl set /services/zookeeper/host1 '{"Id":"host1", "IP":"192.168.10.11"}'
-etcdctl set /services/zookeeper/host2 '{"Id":"host2", "IP":"192.168.10.12"}'
+etcdctl put /services/zookeeper/host1 '{"Id":"host1", "IP":"192.168.10.11"}'
+etcdctl put /services/zookeeper/host2 '{"Id":"host2", "IP":"192.168.10.12"}'
 ```
 
 #### Create the template resource
@@ -367,11 +367,11 @@ Alias for the [strconv.Atoi](https://golang.org/pkg/strconv/#Atoi) function.
 ## Example Usage
 
 ```Bash
-etcdctl set /nginx/domain 'example.com'
-etcdctl set /nginx/root '/var/www/example_dotcom'
-etcdctl set /nginx/worker_processes '2'
-etcdctl set /app/upstream/app1 "10.0.1.100:80"
-etcdctl set /app/upstream/app2 "10.0.1.101:80"
+etcdctl put /nginx/domain 'example.com'
+etcdctl put /nginx/root '/var/www/example_dotcom'
+etcdctl put /nginx/worker_processes '2'
+etcdctl put /app/upstream/app1 "10.0.1.100:80"
+etcdctl put /app/upstream/app2 "10.0.1.101:80"
 ```
 
 `/etc/confd/templates/nginx.conf.tmpl`
@@ -440,10 +440,10 @@ This examples show how to use a combination of the templates functions to do nes
 ```
 etcdctl mkdir /services/web/cust1/
 etcdctl mkdir /services/web/cust2/
-etcdctl set /services/web/cust1/2 '{"IP": "10.0.0.2"}'
-etcdctl set /services/web/cust2/2 '{"IP": "10.0.0.4"}'
-etcdctl set /services/web/cust2/1 '{"IP": "10.0.0.3"}'
-etcdctl set /services/web/cust1/1 '{"IP": "10.0.0.1"}'
+etcdctl put /services/web/cust1/2 '{"IP": "10.0.0.2"}'
+etcdctl put /services/web/cust2/2 '{"IP": "10.0.0.4"}'
+etcdctl put /services/web/cust2/1 '{"IP": "10.0.0.3"}'
+etcdctl put /services/web/cust1/1 '{"IP": "10.0.0.1"}'
 ```
 
 #### Create the template resource
