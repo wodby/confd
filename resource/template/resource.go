@@ -15,10 +15,10 @@ import (
 	"text/template"
 
 	"github.com/BurntSushi/toml"
-	"github.com/kelseyhightower/confd/backends"
-	"github.com/kelseyhightower/confd/log"
-	util "github.com/kelseyhightower/confd/util"
 	"github.com/kelseyhightower/memkv"
+	"github.com/wodby/confd/backends"
+	"github.com/wodby/confd/log"
+	util "github.com/wodby/confd/util"
 )
 
 type Config struct {
@@ -72,13 +72,14 @@ func NewTemplateResource(path string, config Config) (*TemplateResource, error) 
 	// unset from configuration.
 	tc := &TemplateResourceConfig{TemplateResource{Uid: -1, Gid: -1}}
 
-	log.Debug("Loading template resource from " + path)
+	log.Debug("%s", "Loading template resource from "+path)
 	_, err := toml.DecodeFile(path, &tc)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot process template resource %s - %s", path, err.Error())
 	}
 
-	tr := tc.TemplateResource
+	// Use the decoded resource in place: it holds a lock that must not be copied.
+	tr := &tc.TemplateResource
 	tr.keepStageFile = config.KeepStageFile
 	tr.noop = config.Noop
 	tr.storeClient = config.StoreClient
@@ -108,14 +109,14 @@ func NewTemplateResource(path string, config Config) (*TemplateResource, error) 
 	}
 
 	tr.Src = filepath.Join(config.TemplateDir, tr.Src)
-	return &tr, nil
+	return tr, nil
 }
 
 // setVars sets the Vars for template resource.
 func (t *TemplateResource) setVars() error {
 	var err error
 	log.Debug("Retrieving keys from store")
-	log.Debug("Key prefix set to " + t.Prefix)
+	log.Debug("%s", "Key prefix set to "+t.Prefix)
 
 	result, err := t.storeClient.GetValues(util.AppendPrefix(t.Prefix, t.Keys))
 	if err != nil {
@@ -136,13 +137,13 @@ func (t *TemplateResource) setVars() error {
 // StageFile for the template resource.
 // It returns an error if any.
 func (t *TemplateResource) createStageFile() error {
-	log.Debug("Using source template " + t.Src)
+	log.Debug("%s", "Using source template "+t.Src)
 
 	if !util.IsFileExist(t.Src) {
 		return errors.New("Missing template: " + t.Src)
 	}
 
-	log.Debug("Compiling source template " + t.Src)
+	log.Debug("%s", "Compiling source template "+t.Src)
 
 	tmpl, err := template.New(filepath.Base(t.Src)).Funcs(t.funcMap).ParseFiles(t.Src)
 	if err != nil {
@@ -178,28 +179,28 @@ func (t *TemplateResource) createStageFile() error {
 func (t *TemplateResource) sync() error {
 	staged := t.StageFile.Name()
 	if t.keepStageFile {
-		log.Info("Keeping staged file: " + staged)
+		log.Info("%s", "Keeping staged file: "+staged)
 	} else {
 		defer os.Remove(staged)
 	}
 
-	log.Debug("Comparing candidate config to " + t.Dest)
+	log.Debug("%s", "Comparing candidate config to "+t.Dest)
 	ok, err := util.IsConfigChanged(staged, t.Dest)
 	if err != nil {
-		log.Error(err.Error())
+		log.Error("%s", err.Error())
 	}
 	if t.noop {
-		log.Warning("Noop mode enabled. " + t.Dest + " will not be modified")
+		log.Warning("%s", "Noop mode enabled. "+t.Dest+" will not be modified")
 		return nil
 	}
 	if ok {
-		log.Info("Target config " + t.Dest + " out of sync")
+		log.Info("%s", "Target config "+t.Dest+" out of sync")
 		if !t.syncOnly && t.CheckCmd != "" {
 			if err := t.check(); err != nil {
 				return errors.New("Config check failed: " + err.Error())
 			}
 		}
-		log.Debug("Overwriting target config " + t.Dest)
+		log.Debug("%s", "Overwriting target config "+t.Dest)
 		err := os.Rename(staged, t.Dest)
 		if err != nil {
 			if strings.Contains(err.Error(), "device or resource busy") {
@@ -226,9 +227,9 @@ func (t *TemplateResource) sync() error {
 				return err
 			}
 		}
-		log.Info("Target config " + t.Dest + " has been updated")
+		log.Info("%s", "Target config "+t.Dest+" has been updated")
 	} else {
-		log.Debug("Target config " + t.Dest + " in sync")
+		log.Debug("%s", "Target config "+t.Dest+" in sync")
 	}
 	return nil
 }
@@ -264,7 +265,7 @@ func (t *TemplateResource) reload() error {
 // It returns nil if the given cmd returns 0.
 // The command can be run on unix and windows.
 func runCommand(cmd string) error {
-	log.Debug("Running " + cmd)
+	log.Debug("%s", "Running "+cmd)
 	var c *exec.Cmd
 	if runtime.GOOS == "windows" {
 		c = exec.Command("cmd", "/C", cmd)
@@ -274,10 +275,10 @@ func runCommand(cmd string) error {
 
 	output, err := c.CombinedOutput()
 	if err != nil {
-		log.Error(fmt.Sprintf("%q", string(output)))
+		log.Error("%s", fmt.Sprintf("%q", string(output)))
 		return err
 	}
-	log.Debug(fmt.Sprintf("%q", string(output)))
+	log.Debug("%s", fmt.Sprintf("%q", string(output)))
 	return nil
 }
 

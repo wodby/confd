@@ -7,8 +7,8 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/kelseyhightower/confd/backends/env"
-	"github.com/kelseyhightower/confd/log"
+	"github.com/wodby/confd/backends/env"
+	"github.com/wodby/confd/log"
 )
 
 // createTempDirs is a helper function which creates temporary directories
@@ -67,7 +67,7 @@ func TestProcessTemplateResources(t *testing.T) {
 	templateResourcePath := filepath.Join(tempConfDir, "conf.d", "foo.toml")
 	templateResourceFile, err := os.Create(templateResourcePath)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	tmpl, err := template.New("templateResourceConfig").Parse(templateResourceConfigTmpl)
 	if err != nil {
@@ -78,13 +78,13 @@ func TestProcessTemplateResources(t *testing.T) {
 	data["dest"] = destFile.Name()
 	err = tmpl.Execute(templateResourceFile, data)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	os.Setenv("FOO", "bar")
 	storeClient, err := env.NewEnvClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	c := Config{
 		ConfDir:     tempConfDir,

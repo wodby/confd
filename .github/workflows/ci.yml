@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+  # Catch vulnerabilities published after the last change.
+  schedule:
+    - cron: '17 4 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      etcd:
+        image: quay.io/coreos/etcd:v3.6.16@sha256:a9c7cc12156f4b26ca41f0b57ba5b76c45037ff6c1e47ea3d68cb7908d48a965
+        env:
+          ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+          ETCD_ADVERTISE_CLIENT_URLS: http://127.0.0.1:2379
+        ports:
+          - 2379:2379
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.26'
+          check-latest: true
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - name: Vet
+        run: go vet ./...
+      - name: Unit tests
+        run: make test
+      - name: Build
+        run: make build
+      - name: Integration tests
+        env:
+          ETCD_CONTAINER: ${{ job.services.etcd.id }}
+        run: |
+          # The integration scripts call etcdctl and confd from PATH.
+          mkdir -p "${RUNNER_TEMP}/bin"
+          printf '#!/bin/sh\nexec docker exec -e ETCDCTL_API=3 %s etcdctl "$@"\n' "${ETCD_CONTAINER}" > "${RUNNER_TEMP}/bin/etcdctl"
+          chmod +x "${RUNNER_TEMP}/bin/etcdctl"
+          PATH="${PWD}/bin:${RUNNER_TEMP}/bin:${PATH}" make integration
+      - name: Known vulnerabilities
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...

@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kelseyhightower/confd/backends"
+	"github.com/wodby/confd/backends"
 )
 
 const (
@@ -560,23 +560,23 @@ func ExecuteTestTemplate(tt templateTest, t *testing.T) {
 
 	tr, err := templateResource()
 	if err != nil {
-		t.Errorf(tt.desc + ": failed to create TemplateResource: " + err.Error())
+		t.Error(tt.desc + ": failed to create TemplateResource: " + err.Error())
 	}
 
 	tt.updateStore(tr)
 
 	if err := tr.createStageFile(); err != nil {
-		t.Errorf(tt.desc + ": failed createStageFile: " + err.Error())
+		t.Error(tt.desc + ": failed createStageFile: " + err.Error())
 	}
 
 	actual, err := ioutil.ReadFile(tr.StageFile.Name())
 	if err != nil {
-		t.Errorf(tt.desc + ": failed to read StageFile: " + err.Error())
+		t.Error(tt.desc + ": failed to read StageFile: " + err.Error())
 	}
 	switch tt.expected.(type) {
 	case string:
 		if string(actual) != tt.expected.(string) {
-			t.Errorf(fmt.Sprintf("%v: invalid StageFile. Expected %v, actual %v", tt.desc, tt.expected, string(actual)))
+			t.Error(fmt.Sprintf("%v: invalid StageFile. Expected %v, actual %v", tt.desc, tt.expected, string(actual)))
 		}
 	case []string:
 		for _, expected := range tt.expected.([]string) {
@@ -584,7 +584,7 @@ func ExecuteTestTemplate(tt templateTest, t *testing.T) {
 				break
 			}
 		}
-		t.Errorf(fmt.Sprintf("%v: invalid StageFile. Possible expected values %v, actual %v", tt.desc, tt.expected, string(actual)))
+		t.Error(fmt.Sprintf("%v: invalid StageFile. Possible expected values %v, actual %v", tt.desc, tt.expected, string(actual)))
 	}
 }
 
@@ -593,21 +593,21 @@ func ExecuteTestTemplate(tt templateTest, t *testing.T) {
 func setupDirectoriesAndFiles(tt templateTest, t *testing.T) {
 	// create confd directory and toml file
 	if err := os.MkdirAll("./test/confd", os.ModePerm); err != nil {
-		t.Errorf(tt.desc + ": failed to created confd directory: " + err.Error())
+		t.Error(tt.desc + ": failed to created confd directory: " + err.Error())
 	}
 	if err := ioutil.WriteFile(tomlFilePath, []byte(tt.toml), os.ModePerm); err != nil {
-		t.Errorf(tt.desc + ": failed to write toml file: " + err.Error())
+		t.Error(tt.desc + ": failed to write toml file: " + err.Error())
 	}
 	// create templates directory and tmpl file
 	if err := os.MkdirAll("./test/templates", os.ModePerm); err != nil {
-		t.Errorf(tt.desc + ": failed to create template directory: " + err.Error())
+		t.Error(tt.desc + ": failed to create template directory: " + err.Error())
 	}
 	if err := ioutil.WriteFile(tmplFilePath, []byte(tt.tmpl), os.ModePerm); err != nil {
-		t.Errorf(tt.desc + ": failed to write toml file: " + err.Error())
+		t.Error(tt.desc + ": failed to write toml file: " + err.Error())
 	}
 	// create tmp directory for output
 	if err := os.MkdirAll("./test/tmp", os.ModePerm); err != nil {
-		t.Errorf(tt.desc + ": failed to create tmp directory: " + err.Error())
+		t.Error(tt.desc + ": failed to create tmp directory: " + err.Error())
 	}
 }
 

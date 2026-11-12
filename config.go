@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/kelseyhightower/confd/backends"
-	"github.com/kelseyhightower/confd/log"
-	"github.com/kelseyhightower/confd/resource/template"
+	"github.com/wodby/confd/backends"
+	"github.com/wodby/confd/log"
+	"github.com/wodby/confd/resource/template"
 )
 
 type TemplateConfig = template.Config
@@ -36,17 +36,14 @@ type Config struct {
 var config Config
 
 func init() {
-	flag.StringVar(&config.AuthToken, "auth-token", "", "Auth bearer token to use")
 	flag.StringVar(&config.Backend, "backend", "etcd", "backend to use")
-	flag.BoolVar(&config.BasicAuth, "basic-auth", false, "Use Basic Auth to authenticate (only used with -backend=consul and -backend=etcd)")
+	flag.BoolVar(&config.BasicAuth, "basic-auth", false, "Use Basic Auth to authenticate")
 	flag.StringVar(&config.ClientCaKeys, "client-ca-keys", "", "client ca keys")
 	flag.StringVar(&config.ClientCert, "client-cert", "", "the client cert")
 	flag.StringVar(&config.ClientKey, "client-key", "", "the client key")
 	flag.BoolVar(&config.ClientInsecure, "client-insecure", false, "Allow connections to SSL sites without certs (only used with -backend=etcd)")
 	flag.StringVar(&config.ConfDir, "confdir", "/etc/confd", "confd conf directory")
 	flag.StringVar(&config.ConfigFile, "config-file", "/etc/confd/confd.toml", "the confd config file")
-	flag.Var(&config.YAMLFile, "file", "the YAML file to watch for changes (only used with -backend=file)")
-	flag.StringVar(&config.Filter, "filter", "*", "files filter (only used with -backend=file)")
 	flag.IntVar(&config.Interval, "interval", 600, "backend polling interval")
 	flag.BoolVar(&config.KeepStageFile, "keep-stage-file", false, "keep staged files")
 	flag.StringVar(&config.LogLevel, "log-level", "", "level which confd should log messages")
@@ -59,16 +56,8 @@ func init() {
 	flag.StringVar(&config.SRVDomain, "srv-domain", "", "the name of the resource record")
 	flag.StringVar(&config.SRVRecord, "srv-record", "", "the SRV record to search for backends nodes. Example: _etcd-client._tcp.example.com")
 	flag.BoolVar(&config.SyncOnly, "sync-only", false, "sync without check_cmd and reload_cmd")
-	flag.StringVar(&config.AuthType, "auth-type", "", "Vault auth backend type to use (only used with -backend=vault)")
-	flag.StringVar(&config.AppID, "app-id", "", "Vault app-id to use with the app-id backend (only used with -backend=vault and auth-type=app-id)")
-	flag.StringVar(&config.UserID, "user-id", "", "Vault user-id to use with the app-id backend (only used with -backend=value and auth-type=app-id)")
-	flag.StringVar(&config.RoleID, "role-id", "", "Vault role-id to use with the AppRole, Kubernetes backends (only used with -backend=vault and either auth-type=app-role or auth-type=kubernetes)")
-	flag.StringVar(&config.SecretID, "secret-id", "", "Vault secret-id to use with the AppRole backend (only used with -backend=vault and auth-type=app-role)")
-	flag.StringVar(&config.Path, "path", "", "Vault mount path of the auth method (only used with -backend=vault)")
-	flag.StringVar(&config.Table, "table", "", "the name of the DynamoDB table (only used with -backend=dynamodb)")
-	flag.StringVar(&config.Separator, "separator", "", "the separator to replace '/' with when looking up keys in the backend, prefixed '/' will also be removed (only used with -backend=redis)")
-	flag.StringVar(&config.Username, "username", "", "the username to authenticate as (only used with vault and etcd backends)")
-	flag.StringVar(&config.Password, "password", "", "the password to authenticate with (only used with vault and etcd backends)")
+	flag.StringVar(&config.Username, "username", "", "the username to authenticate as")
+	flag.StringVar(&config.Password, "password", "", "the password to authenticate with")
 	flag.BoolVar(&config.Watch, "watch", false, "enable watch support")
 }
 
@@ -82,7 +71,7 @@ func initConfig() error {
 	if os.IsNotExist(err) {
 		log.Debug("Skipping confd config file.")
 	} else {
-		log.Debug("Loading " + config.ConfigFile)
+		log.Debug("%s", "Loading "+config.ConfigFile)
 		configBytes, err := os.ReadFile(config.ConfigFile)
 		if err != nil {
 			return err
@@ -107,7 +96,7 @@ func initConfig() error {
 
 	// Update BackendNodes from SRV records.
 	if config.Backend != "env" && config.SRVRecord != "" {
-		log.Info("SRV record set to " + config.SRVRecord)
+		log.Info("%s", "SRV record set to "+config.SRVRecord)
 		srvNodes, err := getBackendNodesFromSRV(config.SRVRecord)
 		if err != nil {
 			return errors.New("Cannot get nodes from SRV records " + err.Error())
@@ -126,8 +115,6 @@ func initConfig() error {
 	}
 	if len(config.BackendNodes) == 0 {
 		switch config.Backend {
-		case "consul":
-			config.BackendNodes = []string{"127.0.0.1:8500"}
 		case "etcd":
 			peerstr := os.Getenv("ETCDCTL_PEERS")
 			if len(peerstr) > 0 {
@@ -137,32 +124,11 @@ func initConfig() error {
 			}
 		case "etcdv3":
 			config.BackendNodes = []string{"127.0.0.1:2379"}
-		case "redis":
-			config.BackendNodes = []string{"127.0.0.1:6379"}
-		case "vault":
-			config.BackendNodes = []string{"http://127.0.0.1:8200"}
-		case "zookeeper":
-			config.BackendNodes = []string{"127.0.0.1:2181"}
 		}
 	}
 	// Initialize the storage client
-	log.Info("Backend set to " + config.Backend)
+	log.Info("%s", "Backend set to "+config.Backend)
 
-	if config.Watch {
-		unsupportedBackends := map[string]bool{
-			"dynamodb": true,
-			"ssm":      true,
-		}
-
-		if unsupportedBackends[config.Backend] {
-			log.Info(fmt.Sprintf("Watch is not supported for backend %s. Exiting...", config.Backend))
-			os.Exit(1)
-		}
-	}
-
-	if config.Backend == "dynamodb" && config.Table == "" {
-		return errors.New("no DynamoDB table configured")
-	}
 	config.ConfigDir = filepath.Join(config.ConfDir, "conf.d")
 	config.TemplateDir = filepath.Join(config.ConfDir, "templates")
 	return nil
