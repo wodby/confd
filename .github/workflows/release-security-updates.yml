@@ -1,0 +1,43 @@
+name: Release security updates
+
+# Merges a Dependabot security update once CI has passed on it, then publishes
+# the next patch tag so Wodby Edge picks the fix up. Version updates are off in
+# dependabot.yml, so only security pull requests come from Dependabot.
+#
+# workflow_run runs this file from the default branch, so a pull request cannot
+# change it, and the job never checks out or runs pull request code.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+# Merges and tags one at a time, so two runs cannot claim the same tag.
+concurrency:
+  group: release-security-updates
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/go_modules/')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - name: Merge and tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: .github/scripts/release-security-update.sh
