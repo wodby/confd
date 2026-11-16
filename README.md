@@ -36,7 +36,13 @@ backends. The `etcdv3` test needs `etcdctl` and an etcd server on `127.0.0.1:237
 
 ## Releases
 
-Releases are signed `vX.Y.Z` Git tags. Wodby Edge builds confd from the tag's source.
+Releases are `vX.Y.Z` Git tags, and Wodby Edge builds confd from the tag's source.
+Maintainers sign the tags they publish and list the changes in `CHANGELOG`.
+
+Dependabot proposes security updates only. When CI passes on one of its pull requests,
+the Release security updates workflow merges it and publishes the next patch tag, with
+the updated modules in the tag message. An update that would move the etcd client off
+3.6, or that changes more than `go.mod` and `go.sum`, stays open for review.
 
 ## Documentation
 
